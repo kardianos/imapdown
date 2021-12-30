@@ -80,10 +80,6 @@ func (w *Worker) Iter(ctx context.Context, c *client.Client, mi *imap.MailboxInf
 
 	w.log("Folder: %s", mi.Name)
 
-	if mi.Name != "Info/ebay" {
-		return nil
-	}
-
 	_, err := c.Select(mi.Name, true)
 	if err != nil {
 		return err
