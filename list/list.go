@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-imap"
@@ -82,7 +83,7 @@ func (w *Worker) Iter(ctx context.Context, c *client.Client, mi *imap.MailboxInf
 
 	_, err := c.Select(mi.Name, true)
 	if err != nil {
-		return err
+		return fmt.Errorf("select: %w", err)
 	}
 
 	seqset, err := imap.ParseSeqSet("1:*")
@@ -126,7 +127,14 @@ func (w *Worker) Iter(ctx context.Context, c *client.Client, mi *imap.MailboxInf
 		return ctx.Err()
 	case err := <-fetchErr:
 		if err != nil {
-			return err
+			e := err.Error()
+			switch {
+			default:
+				return fmt.Errorf("fetch: %w", err)
+			case strings.Contains(e, "No matching messages"):
+				w.log("\tno-messages")
+				return nil
+			}
 		}
 	}
 
